@@ -1,5 +1,6 @@
 from aip import AipFace
-
+import base64
+ 
 APP_ID = '9837784'
 API_KEY = 'DWMYBEzB0ksAWtp1aeneOhlc'
 SECRET_KEY = 'IBGC9RNlpsq2Yg8vWAuAjxt2Wzc9Dibb'
@@ -9,7 +10,8 @@ SECRET_KEY = 'IBGC9RNlpsq2Yg8vWAuAjxt2Wzc9Dibb'
 def identify_face(image):
     client = AipFace(APP_ID, API_KEY, SECRET_KEY)
     #image = "取决于image_type参数，传入BASE64字符串或URL字符串或FACE_TOKEN字符串"
-    imageType = "URL"
+    #imageType = "URL"
+    imageType = "BASE64"
     """ 调用人脸检测 """
     """ 如果有可选参数 """
     options = {}
@@ -30,13 +32,18 @@ def identify_face(image):
          # beauty=face['beauty']
          # expression=face['expression']['type']
          # face_type=face['face_type']['type']
+      # print(face_info)
        return face_info
 
     else:
        print(face_res['error_msg'])
        return 0000
 
-#identify_face(image)
+#with open("20190614152105_006.jpg", 'rb') as f:
+#    base64_data = base64.b64encode(f.read())
+#    s = base64_data.decode()
+#    print(s)
+#identify_face('20190614152105_006.jpg')
+#identify_face(s)
 if __name__ != "__main__":
      pass
-

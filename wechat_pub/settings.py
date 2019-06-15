@@ -25,7 +25,7 @@ SECRET_KEY = 'r(+c=l#7af(dc@%9g0g3=o((pxe7$+$k(3*%vuve7_^t)(f$h)'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['www.msgcon.site','47.52.234.76']
+ALLOWED_HOSTS = ['www.msgcon.site','47.52.234.76','wx.msgcon.site','172.31.81.132']
 APPEND_SLASH=False
 
 

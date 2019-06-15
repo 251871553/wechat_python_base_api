@@ -14,11 +14,15 @@ from django.shortcuts import render,render_to_response
 from django.template import RequestContext
 from .bdaipface import *
 import requests
+import random
+import logging
 
 
 API_key='1085948580'
 keyfrom='weixinapi2017'
 
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
 @csrf_exempt
 def index(request):
@@ -40,8 +44,8 @@ def index(request):
     else:       #request.method == "POST"
         #return HttpResponse("Hello, world. You're at the polls index.")
         xml_str = request.body   #xml字符串
-        print(xml_str)
-        print('xxxxxxxxxxxxxxxxxxxxx')
+        logging.info(xml_str)
+        #print(xml_str)
         request_xml = etree.fromstring(xml_str)     #转化成xml
         toUser = request_xml.find('ToUserName').text
         fromUser = request_xml.find('FromUserName').text
@@ -68,7 +72,8 @@ def index(request):
               youdao_api_url='http://fanyi.youdao.com/openapi.do?keyfrom=%s&key=%s&type=data&doctype=json&version=1.1&q=%s' % (keyfrom,API_key,content)
               res = requests.get(youdao_api_url).json()
               errorCode=res['errorCode']
-              print(res)
+              #print(res)
+              logging.info(res)
               if errorCode==0:
                  result_text=res['translation'][0]
               else:
@@ -85,30 +90,46 @@ def index(request):
               return HttpResponse(haha)
         elif MsgType == 'image':    #图片消息
               PicUrl=request_xml.find('PicUrl').text
-              #PicUrl='https://ss0.bdstatic.com/94oJfD_bAAcT8t7mm9GUKT-xh_/timg?image&quality=100&size=b4000_4000&sec=1554632855&di=9998bb5c8131864dbc4ce568ae923a80&src=http://image.biaobaiju.com/uploads/20180803/20/1533300389-KFRyeJpPvX.jpg'
               MsgId = request_xml.find('MsgId').text
               MediaId=request_xml.find('MediaId').text
-              print(PicUrl)
-              bd_face=identify_face(PicUrl)
+              #print(PicUrl)
+              server_time=time.strftime("%Y%m%d%H%M%S", time.localtime())
+              rand_str=str(random.randint(1,100)).rjust(3,'0')
+              img_name='weixin_api/media/img/'+server_time+'_'+rand_str+'.jpg'
+              html_img = requests.get(PicUrl)
+              #print(img_name)
+              with open(img_name,"wb")as f:
+                   f.write(html_img.content)
+              with open(img_name, 'rb') as f:
+                  base64_data = base64.b64encode(f.read())
+                  s = base64_data.decode()
+              bd_face=identify_face(s)
               if bd_face == 0000:
-                 print('error')
+                 #print('error')
+                 logging.error('bd_face_error')
               else:
-                 for x in bd_face:
-                    print(x)
+                 for face_detaile in bd_face:
+                    logging.info(face_detaile)
+               #     print(face_detaile)
+                    reply_face_content='''性别：%s
+年龄：%s
+脸型：%s
+颜值：%s''' % (face_detaile['gender']['type'],face_detaile['age'],face_detaile['face_shape']['type'],face_detaile['beauty'])
              # try:
             #     MediaId=request_xml.find('MediaId').text
            #   except AttributeError as e:                 #腾讯接口调试会没有mediaid,所有有个异常处理，实际不需要
           #       print(e)
          #        MediaId='1'
+              #print(reply_face_content)
               haha=''' 
               <xml>
               <ToUserName><![CDATA[%s]]></ToUserName>
               <FromUserName><![CDATA[%s]]></FromUserName>
               <CreateTime>%d</CreateTime>
-              <MsgType><![CDATA[image]]></MsgType>
-              <Image><MediaId><![CDATA[%s]]></MediaId></Image>
+              <MsgType><![CDATA[text]]></MsgType>
+              <Content><![CDATA[%s]]></Content>
               </xml>
-              '''  % (fromUser,toUser,time_wx,MediaId)
+              '''  % (fromUser,toUser,time_wx,reply_face_content)
               return HttpResponse(haha)
         
         elif MsgType == 'voice':            #语音消息
